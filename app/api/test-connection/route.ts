@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
-import { getConnection } from '@/lib/db';
+import { query } from '@/lib/db';
 
 export async function GET() {
   try {
-    const pool = await getConnection();
-    await pool.request().query('SELECT 1');
+    await query('SELECT 1 as test');
     return NextResponse.json({ status: 'success', message: 'Database connection successful' });
   } catch (error) {
     console.error('Database connection test failed:', error);
