@@ -6,7 +6,11 @@
     "dev": "WATCHPACK_POLLING=true next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "npm run build"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   },
   "dependencies": {
     "@azure/storage-blob": "^12.17.0",
