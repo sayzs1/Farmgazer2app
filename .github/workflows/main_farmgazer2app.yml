@@ -13,7 +13,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
@@ -52,8 +52,8 @@ jobs:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+      id-token: write
+      contents: read
 
     steps:
       - name: Download artifact from build job
@@ -71,6 +71,44 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_ADCCA55F290C4CCDA738BB525A0109E4 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_F93D0492C2B9485BA89305381EF23CF7 }}
 
+      - name: Set Web App Settings
+        uses: azure/appservice-settings@v1
+        with:
+          app-name: 'farmgazer2app'
+          app-settings-json: |
+            [
+              {
+                "name": "AZURE_SQL_SERVER",
+                "value": "${{ secrets.AZURE_SQL_SERVER }}",
+                "slotSetting": false
+              },
+              {
+                "name": "AZURE_SQL_DATABASE",
+                "value": "${{ secrets.AZURE_SQL_DATABASE }}",
+                "slotSetting": false
+              },
+              {
+                "name": "AZURE_SQL_USER",
+                "value": "${{ secrets.AZURE_SQL_USER }}",
+                "slotSetting": false
+              },
+              {
+                "name": "AZURE_SQL_PASSWORD",
+                "value": "${{ secrets.AZURE_SQL_PASSWORD }}",
+                "slotSetting": false
+              },
+              {
+                "name": "AZURE_STORAGE_CONNECTION_STRING",
+                "value": "${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}",
+                "slotSetting": false
+              },
+              {
+                "name": "AZURE_STORAGE_CONTAINER_NAME",
+                "value": "${{ secrets.AZURE_STORAGE_CONTAINER_NAME }}",
+                "slotSetting": false
+              }
+            ]
+
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
@@ -78,11 +116,4 @@ jobs:
           app-name: 'farmgazer2app'
           slot-name: 'Production'
           package: .
-          app-settings: |
-            AZURE_SQL_SERVER=${{ secrets.AZURE_SQL_SERVER }}
-            AZURE_SQL_DATABASE=${{ secrets.AZURE_SQL_DATABASE }}
-            AZURE_SQL_USER=${{ secrets.AZURE_SQL_USER }}
-            AZURE_SQL_PASSWORD=${{ secrets.AZURE_SQL_PASSWORD }}
-            AZURE_STORAGE_CONNECTION_STRING=${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
-            AZURE_STORAGE_CONTAINER_NAME=${{ secrets.AZURE_STORAGE_CONTAINER_NAME }}
           
