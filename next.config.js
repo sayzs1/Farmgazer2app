@@ -1,7 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // 确保在开发环境下没有启用静态导出
-  ...(process.env.NODE_ENV === 'development' ? {} : { output: 'export' }),
   eslint: {
     ignoreDuringBuilds: true,
   },
