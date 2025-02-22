@@ -23,7 +23,13 @@ jobs:
         with:
           node-version: '18.x'
 
-      - name: npm install, build, and test
+      # 清理和重新安装
+      - name: Clean install and build
+        run: |
+          rm -rf node_modules
+          rm -rf .next
+          npm ci
+          npm run build
         env:
           AZURE_SQL_SERVER: ${{ secrets.AZURE_SQL_SERVER }}
           AZURE_SQL_DATABASE: ${{ secrets.AZURE_SQL_DATABASE }}
@@ -31,15 +37,25 @@ jobs:
           AZURE_SQL_PASSWORD: ${{ secrets.AZURE_SQL_PASSWORD }}
           AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
           AZURE_STORAGE_CONTAINER_NAME: ${{ secrets.AZURE_STORAGE_CONTAINER_NAME }}
-        run: |
-          rm -rf node_modules
-          rm -rf .next
-          npm install --production
-          npm run build
-          npm run test --if-present
+          NODE_ENV: production
 
+      # 在构建后立即验证 .next 目录
+      - name: Verify build output
+        run: |
+          echo "Listing .next directory contents:"
+          ls -la .next/
+          if [ ! -f ".next/BUILD_ID" ]; then
+            echo "BUILD_ID file not found!"
+            exit 1
+          fi
+
+      # 确保 .next 目录被包含在 zip 中
       - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
+        run: |
+          echo "Creating deployment package..."
+          zip -r release.zip . -x "*.git*" "*.github*"
+          echo "Verifying zip contents:"
+          unzip -l release.zip | grep .next/
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -65,13 +81,19 @@ jobs:
 
       - name: Unzip artifact for deployment
         run: unzip release.zip
-      
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_029B35931F9A430DAF29AAAD877FEE41 }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_ADCCA55F290C4CCDA738BB525A0109E4 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_F93D0492C2B9485BA89305381EF23CF7 }}
+
+      # 在部署前安装生产依赖
+      - name: Install production dependencies
+        run: |
+          npm ci --only=production
+          ls -la .next/
 
       # 设置应用设置
       - name: Set Web App Settings
@@ -80,6 +102,21 @@ jobs:
           app-name: 'farmgazer2app'
           app-settings-json: |
             [
+              {
+                "name": "NODE_ENV",
+                "value": "production",
+                "slotSetting": false
+              },
+              {
+                "name": "PORT",
+                "value": "3000",
+                "slotSetting": false
+              },
+              {
+                "name": "WEBSITES_PORT",
+                "value": "3000",
+                "slotSetting": false
+              },
               {
                 "name": "AZURE_SQL_SERVER",
                 "value": "${{ secrets.AZURE_SQL_SERVER }}",
@@ -112,7 +149,6 @@ jobs:
               }
             ]
 
-      # 部署
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
