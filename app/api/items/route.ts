@@ -1,32 +1,10 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-
-interface ImageData {
-  image_id: string;
-  image_url: string;
-  time: string;
-  temperature: number;
-  humidity: number;
-  category_tag: string;
-  AI_analysis: string;
-  priority: number;
-  device_id: string;
-}
-
-interface DetectionResponse {
-  id: string;
-  imageUrl: string;
-  deviceId: string;
-  timestamp: string;
-  category: 'weeds' | 'drought' | 'disease' | 'waterpooling';
-  temperature: number;
-  humidity: number;
-  analysis: string;
-}
+import { ImageData, Detection } from '@/types';
 
 export async function GET(request: Request) {
   try {
-    const result = await query<ImageData[]>(`
+    const result = await query<ImageData>(`
       SELECT 
         image_id,
         image_url,
@@ -41,7 +19,11 @@ export async function GET(request: Request) {
       ORDER BY time DESC
     `);
 
-    const detections: DetectionResponse[] = result.map(item => ({
+    if (!result || !Array.isArray(result)) {
+      throw new Error('Invalid database response');
+    }
+
+    const detections: Detection[] = result.map(item => ({
       id: item.image_id,
       imageUrl: item.image_url,
       deviceId: item.device_id,
