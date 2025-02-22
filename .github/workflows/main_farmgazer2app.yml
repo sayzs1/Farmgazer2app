@@ -24,6 +24,13 @@ jobs:
           node-version: '18.x'
 
       - name: npm install, build, and test
+        env:
+          AZURE_SQL_SERVER: ${{ secrets.AZURE_SQL_SERVER }}
+          AZURE_SQL_DATABASE: ${{ secrets.AZURE_SQL_DATABASE }}
+          AZURE_SQL_USER: ${{ secrets.AZURE_SQL_USER }}
+          AZURE_SQL_PASSWORD: ${{ secrets.AZURE_SQL_PASSWORD }}
+          AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+          AZURE_STORAGE_CONTAINER_NAME: ${{ secrets.AZURE_STORAGE_CONTAINER_NAME }}
         run: |
           npm install
           npm run build --if-present
@@ -71,4 +78,11 @@ jobs:
           app-name: 'farmgazer2app'
           slot-name: 'Production'
           package: .
+          app-settings: |
+            AZURE_SQL_SERVER=${{ secrets.AZURE_SQL_SERVER }}
+            AZURE_SQL_DATABASE=${{ secrets.AZURE_SQL_DATABASE }}
+            AZURE_SQL_USER=${{ secrets.AZURE_SQL_USER }}
+            AZURE_SQL_PASSWORD=${{ secrets.AZURE_SQL_PASSWORD }}
+            AZURE_STORAGE_CONNECTION_STRING=${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+            AZURE_STORAGE_CONTAINER_NAME=${{ secrets.AZURE_STORAGE_CONTAINER_NAME }}
           
