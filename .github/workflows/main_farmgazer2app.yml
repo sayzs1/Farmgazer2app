@@ -71,6 +71,12 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_ADCCA55F290C4CCDA738BB525A0109E4 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_F93D0492C2B9485BA89305381EF23CF7 }}
 
+      # 停止 Web App
+      - name: Stop Azure Web App
+        run: |
+          az webapp stop --name farmgazer2app --resource-group farmgazer2app_group
+
+      # 设置应用设置
       - name: Set Web App Settings
         uses: azure/appservice-settings@v1
         with:
@@ -109,6 +115,7 @@ jobs:
               }
             ]
 
+      # 部署
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
@@ -116,4 +123,10 @@ jobs:
           app-name: 'farmgazer2app'
           slot-name: 'Production'
           package: .
+          clean: true
+
+      # 启动 Web App
+      - name: Start Azure Web App
+        run: |
+          az webapp start --name farmgazer2app --resource-group farmgazer2app_group
           
