@@ -1,23 +1,13 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-
-interface ImageData {
-  image_id: string;
-  image_url: string;
-  time: string;
-  temperature: number;
-  humidity: number;
-  category_tag: string;
-  AI_analysis: string;
-  device_id: string;
-}
+import { ImageData } from '@/types';
 
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
-    const result = await query<ImageData[]>(`
+    const result = await query<ImageData>(`
       SELECT 
         image_id,
         image_url,
@@ -31,14 +21,14 @@ export async function GET(
       WHERE image_id = @param0
     `, [params.id]);
 
-    if (result.length === 0) {
+    if (!result || result.length === 0) {
       return NextResponse.json(
         { status: 'error', message: '未找到相关记录' },
         { status: 404 }
       );
     }
 
-    const detection = result[0];
+    const detection = result[0]; // 获取第一条记录
     
     return NextResponse.json({
       status: 'success',
