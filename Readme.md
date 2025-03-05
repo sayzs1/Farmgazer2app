@@ -1,6 +1,8 @@
 # FarmGazer 2.0
 
-A Next.js application for agricultural monitoring and analysis, deployed on Azure Web Services.
+A Next.js application for agricultural monitoring and analysis, deployed on Azure Web Services. The deployment process is automated using GitHub Actions workflow.
+Live demo: [FarmGazer 2.0](https://farmgazer2app-ducnavhaadahdefa.eastus-01.azurewebsites.net/database)
+
 
 ## 🌾 Overview
 
