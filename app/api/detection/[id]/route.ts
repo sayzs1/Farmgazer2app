@@ -1,34 +1,50 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { ImageData } from '@/types';
+
+interface ImageData {
+  image_id: string;
+  image_url: string;
+  time: string;
+  temperature: number;
+  humidity: number;
+  category_tag: string;
+  AI_analysis: string;
+  device_id: string;
+}
 
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
-    const result = await query<ImageData>(`
+    // 首先获取当前图片信息
+    const currentImage = await query<ImageData[]>(`
       SELECT 
-        image_id,
-        image_url,
-        time,
-        temperature,
-        humidity,
-        category_tag,
-        AI_analysis,
-        device_id
+        image_id, image_url, time, temperature, humidity,
+        category_tag, AI_analysis, device_id
       FROM dbo.ImageData
       WHERE image_id = @param0
     `, [params.id]);
 
-    if (!result || result.length === 0) {
+    if (currentImage.length === 0) {
       return NextResponse.json(
         { status: 'error', message: '未找到相关记录' },
         { status: 404 }
       );
     }
 
-    const detection = result[0]; // 获取第一条记录
+    // 获取同一设备同一天的所有图片
+    const sameDeviceImages = await query<ImageData[]>(`
+      SELECT 
+        image_id, image_url, time, temperature, humidity,
+        category_tag, AI_analysis, device_id
+      FROM dbo.ImageData
+      WHERE device_id = @param0
+      AND CAST(time AS DATE) = CAST(@param1 AS DATE)
+      ORDER BY time ASC
+    `, [currentImage[0].device_id, currentImage[0].time]);
+
+    const detection = currentImage[0];
     
     return NextResponse.json({
       status: 'success',
@@ -40,7 +56,13 @@ export async function GET(
         category: detection.category_tag.toLowerCase(),
         temperature: detection.temperature,
         humidity: detection.humidity,
-        analysis: detection.AI_analysis
+        analysis: detection.AI_analysis,
+        relatedImages: sameDeviceImages.map(img => ({
+          id: img.image_id,
+          imageUrl: img.image_url,
+          timestamp: img.time,
+          category: img.category_tag.toLowerCase()
+        }))
       }
     });
   } catch (error) {

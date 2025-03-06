@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import FilterBar from '@/components/database/FilterBar';
 import { ImageList } from '@/components/database/ImageList';
-import { NavigationBar } from '@/components/layout/NavigationBar';
+import { Loading } from '@/components/ui/loading';
 
 interface Detection {
   image_id: string;
@@ -64,13 +64,7 @@ export default function DatabasePage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-white">
-        <div className="flex items-center justify-center h-screen">
-          <div className="text-gray-600">Loading...</div>
-        </div>
-      </div>
-    );
+    return <Loading />;
   }
 
   if (error) {

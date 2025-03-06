@@ -41,7 +41,7 @@ export default function NavigationBar() {
                 key={href}
                 href={href}
                 className={`flex flex-col items-center space-y-1 ${
-                  isActive ? 'text-blue-600' : 'text-gray-600'
+                  isActive ? 'text-emerald-700' : 'text-gray-600'
                 }`}
               >
                 <Icon className="w-6 h-6" />

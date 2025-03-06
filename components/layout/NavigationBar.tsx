@@ -10,7 +10,7 @@ export function NavigationBar() {
   const navItems = [
     { icon: Home, label: 'Home', href: '/' },
     { icon: Database, label: 'Database', href: '/database' },
-    { icon: ListTodo, label: 'Task', href: '/task' },
+    { icon: ListTodo, label: 'Task', href: '/tasklist' },
   ];
 
   return (
@@ -23,7 +23,7 @@ export function NavigationBar() {
               key={href}
               href={href}
               className={`flex flex-col items-center space-y-1 px-4 py-2 ${
-                isActive ? 'text-green-500' : 'text-gray-600'
+                isActive ? 'text-emerald-700' : 'text-gray-600'
               }`}
             >
               <Icon className="w-6 h-6" />

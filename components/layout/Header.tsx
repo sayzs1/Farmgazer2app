@@ -17,6 +17,8 @@ export const Header = () => {
         return 'Tasks';
       case '/settings':
         return 'Settings';
+      case '/tasklist':
+        return 'Tasklist';
       default:
         return pathname.startsWith('/detection/') ? 'Detail Page' : 'Overview';
     }

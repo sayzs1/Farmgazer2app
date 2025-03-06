@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // 确保在开发环境下没有启用静态导出
+  // output: 'export', // 此行已被禁用
   eslint: {
     ignoreDuringBuilds: true,
   },

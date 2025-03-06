@@ -41,6 +41,15 @@ module.exports = {
           foreground: "hsl(var(--secondary-foreground))",
         },
       },
+      keyframes: {
+        'progress-indeterminate': {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(200%)' }
+        },
+      },
+      animation: {
+        'progress-indeterminate': 'progress-indeterminate 1.5s ease-in-out infinite',
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],

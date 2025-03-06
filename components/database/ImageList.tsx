@@ -64,7 +64,7 @@ export const ImageList = ({ detections, filters }: ImageListProps) => {
             <div className="flex-1 ml-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="text-sm font-medium">Device {detection.device_id}</div>
-                <span className={`inline-block px-2 py-0.5 rounded-[5px] text-xs font-normal ${
+                <span className={`inline-block px-2 py-0.5 rounded-[5px] text-xs font-normal mr-4 ${
                   colorSchemes[detection.category_tag.toLowerCase() as keyof typeof colorSchemes]
                 }`}>
                   {detection.category_tag}

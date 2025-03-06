@@ -21,32 +21,26 @@ const sqlConfig = {
 const pool = new sql.ConnectionPool(sqlConfig);
 const poolConnect = pool.connect();
 
-// 导出 getConnection 函数
-export async function getConnection() {
-  await poolConnect;
-  return pool;
-}
+// 在应用关闭时关闭连接池
+process.on('SIGINT', () => {
+  pool.close();
+});
 
-// 导出 query 函数
-export async function query<T>(queryString: string, params: any[] = []) {
+export async function query<T>(queryText: string, params: any[] = []): Promise<T> {
+  await poolConnect; // 确保池已连接
+
   try {
-    const connection = await getConnection();
-    const request = connection.request();
+    const request = pool.request();
     
     // 添加参数
     params.forEach((param, index) => {
       request.input(`param${index}`, param);
     });
-    
-    const result = await request.query(queryString);
-    return result.recordset as T[];
-  } catch (error) {
-    console.error('Database query error:', error);
-    throw error;
+
+    const result = await request.query(queryText);
+    return result.recordset as unknown as T;
+  } catch (err) {
+    console.error('Database query error:', err);
+    throw err;
   }
 }
-
-// 在应用关闭时关闭连接池
-process.on('SIGINT', () => {
-  pool.close();
-});
