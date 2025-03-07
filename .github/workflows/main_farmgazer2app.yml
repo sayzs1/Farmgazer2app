@@ -14,6 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    timeout-minutes: 30  # 添加超时设置
 
     steps:
       - uses: actions/checkout@v4
@@ -39,6 +40,15 @@ jobs:
           AZURE_STORAGE_CONTAINER_NAME: ${{ secrets.AZURE_STORAGE_CONTAINER_NAME }}
           NODE_ENV: production
 
+      # 优化部署包大小
+      - name: Optimize deployment package
+        run: |
+          echo "优化部署包大小..."
+          rm -rf node_modules/.cache
+          find . -name "*.map" -type f -delete
+          npm prune --production
+          du -sh . node_modules .next
+
       # 在构建后立即验证 .next 目录
       - name: Verify build output
         run: |
@@ -49,13 +59,14 @@ jobs:
             exit 1
           fi
 
-      # 确保 .next 目录被包含在 zip 中
+      # 确保 .next 目录被包含在 zip 中，并排除不必要的文件
       - name: Zip artifact for deployment
         run: |
           echo "Creating deployment package..."
-          zip -r release.zip . -x "*.git*" "*.github*"
+          zip -r release.zip . -x "*.git*" "*.github*" "node_modules/.cache/*" "*.map" "*.log"
           echo "Verifying zip contents:"
           unzip -l release.zip | grep .next/
+          du -sh release.zip
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -72,6 +83,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
+    timeout-minutes: 30  # 添加超时设置
 
     steps:
       - name: Download artifact from build job
@@ -89,10 +101,74 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_ADCCA55F290C4CCDA738BB525A0109E4 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_F93D0492C2B9485BA89305381EF23CF7 }}
 
+      # 创建自定义部署脚本
+      - name: Create deployment scripts
+        run: |
+          echo "创建自定义部署脚本..."
+          echo '[config]' > .deployment
+          echo 'command = bash deploy.sh' >> .deployment
+          
+          cat > deploy.sh << 'EOL'
+          #!/bin/bash
+          
+          # 优化内存使用
+          export NODE_OPTIONS="--max-old-space-size=4096"
+          
+          # 设置启动命令
+          echo "node server.js" > startup.txt
+          
+          echo "部署完成!"
+          exit 0
+          EOL
+          
+          chmod +x deploy.sh
+          
+          # 创建web.config
+          cat > web.config << 'EOL'
+          <?xml version="1.0" encoding="utf-8"?>
+          <configuration>
+            <system.webServer>
+              <webSocket enabled="false" />
+              <handlers>
+                <add name="iisnode" path="server.js" verb="*" modules="iisnode" />
+              </handlers>
+              <rewrite>
+                <rules>
+                  <rule name="StaticContent">
+                    <action type="Rewrite" url="public{REQUEST_URI}" />
+                  </rule>
+                  <rule name="DynamicContent">
+                    <conditions>
+                      <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="True" />
+                    </conditions>
+                    <action type="Rewrite" url="server.js" />
+                  </rule>
+                </rules>
+              </rewrite>
+              <iisnode 
+                nodeProcessCommandLine="node.exe --max-old-space-size=4096"
+                watchedFiles="*.js;node_modules\*;routes\*.js;views\*.jade"
+                loggingEnabled="true"
+                logDirectory="iisnode"
+                maxLogFileSizeInKB="1024"
+                maxTotalLogFileSizeInKB="20480"
+                maxLogFiles="20"
+              />
+              <security>
+                <requestFiltering>
+                  <hiddenSegments>
+                    <remove segment="bin" />
+                  </hiddenSegments>
+                </requestFiltering>
+              </security>
+            </system.webServer>
+          </configuration>
+          EOL
+
       # 在部署前安装生产依赖
       - name: Install production dependencies
         run: |
-          npm ci --only=production
+          npm ci --only=production --no-optional
           ls -la .next/
 
       # 设置应用设置
@@ -115,6 +191,21 @@ jobs:
               {
                 "name": "WEBSITES_PORT",
                 "value": "3000",
+                "slotSetting": false
+              },
+              {
+                "name": "NODE_OPTIONS",
+                "value": "--max-old-space-size=4096",
+                "slotSetting": false
+              },
+              {
+                "name": "WEBSITE_NODE_DEFAULT_VERSION",
+                "value": "~18",
+                "slotSetting": false
+              },
+              {
+                "name": "SCM_COMMAND_IDLE_TIMEOUT",
+                "value": "1800",
                 "slotSetting": false
               },
               {
@@ -157,4 +248,4 @@ jobs:
           slot-name: 'Production'
           package: .
           clean: true
-          
+          startup-command: 'node server.js'
