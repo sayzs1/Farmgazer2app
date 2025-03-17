@@ -4,17 +4,19 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface DetectionCardProps {
   id: string;
   imageUrl: string;
   deviceId: string;
+  deviceName: string;
   timestamp: string;
   category: 'weeds' | 'drought' | 'disease' | 'ponding' | 'healthy' | 'pest';
   priority?: number;
 }
 
-export function DetectionCard({ id, imageUrl, deviceId, timestamp, category, priority = 0 }: DetectionCardProps) {
+export const DetectionCard = ({ id, imageUrl, deviceId, deviceName, timestamp, category, priority = 0 }: DetectionCardProps) => {
   const router = useRouter();
   const [currentPriority, setCurrentPriority] = useState<number>(priority);
   const [priorityLoading, setPriorityLoading] = useState(false);
@@ -25,7 +27,8 @@ export function DetectionCard({ id, imageUrl, deviceId, timestamp, category, pri
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
-    hour12: false
+    hour12: false,
+    timeZone: 'UTC'
   });
 
   // Material Design 颜色方案
@@ -71,16 +74,27 @@ export function DetectionCard({ id, imageUrl, deviceId, timestamp, category, pri
     router.push(`/detection/${id}`);
   };
 
+  // 处理键盘操作
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      router.push(`/detection/${id}`);
+    }
+  };
+
   return (
-    <div 
-      className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer transition-transform hover:scale-[1.02]"
+    <motion.div 
+      className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer"
       onClick={handleCardClick}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          router.push(`/detection/${id}`);
-        }
+      onKeyDown={handleKeyDown}
+      aria-label={`Detection of ${category} from ${deviceName}`}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ 
+        type: "spring", 
+        stiffness: 400, 
+        damping: 17 
       }}
     >
       {/* 图片区域 */}
@@ -93,11 +107,12 @@ export function DetectionCard({ id, imageUrl, deviceId, timestamp, category, pri
         />
         
         {/* 优先级按钮 */}
-        <button
+        <motion.button
           onClick={handlePriorityChange}
           disabled={priorityLoading}
-          className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors flex items-center justify-center z-10"
+          className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors flex items-center justify-center z-[5]"
           title={`优先级：${currentPriority === 0 ? '低' : currentPriority === 1 ? '中' : '高'}`}
+          whileTap={{ scale: 0.9 }}
         >
           {priorityLoading ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -110,15 +125,15 @@ export function DetectionCard({ id, imageUrl, deviceId, timestamp, category, pri
               }`} 
             />
           )}
-        </button>
+        </motion.button>
       </div>
 
       {/* 信息区域 */}
       <div className="p-4 space-y-2">
-        {/* 设备ID和分类标签 */}
+        {/* 设备名称和分类标签 */}
         <div className="flex items-center justify-between">
           <div className="text-base font-medium">
-            Device {deviceId}
+            {deviceName}
           </div>
           <div className={`px-4 py-1 rounded-full text-sm font-medium capitalize ${categoryColors[category]}`}>
             {category}
@@ -129,6 +144,6 @@ export function DetectionCard({ id, imageUrl, deviceId, timestamp, category, pri
           {date}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
-}
+};

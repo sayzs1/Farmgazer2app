@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import * as TabsPrimitive from '@radix-ui/react-tabs';
+import { motion } from 'framer-motion';
 
 import { cn } from '@/lib/utils';
 
@@ -26,14 +27,20 @@ const TabsTrigger = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>
 >(({ className, ...props }, ref) => (
-  <TabsPrimitive.Trigger
-    ref={ref}
-    className={cn(
-      'inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-base font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border-emerald-600',
-      className
-    )}
-    {...props}
-  />
+  <motion.div
+    className="flex-1 flex items-center justify-center"
+    whileHover={{ scale: 1.05 }}
+    whileTap={{ scale: 0.95, backgroundColor: '#e0e0e0' }}
+  >
+    <TabsPrimitive.Trigger
+      ref={ref}
+      className={cn(
+        'flex-1 inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-base font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border-emerald-600',
+        className
+      )}
+      {...props}
+    />
+  </motion.div>
 ));
 TabsTrigger.displayName = TabsPrimitive.Trigger.displayName;
 

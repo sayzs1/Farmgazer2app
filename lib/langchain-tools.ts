@@ -53,7 +53,7 @@ export const createDatabaseQueryTool = () => {
     - AI_analysis (字符串): AI分析结果的文本描述
     - priority (整数): 问题优先级 (1-5)
     
-    用户提出的查询将被转换为SQL并在数据库上执行。
+    用户提出的查询将被转换为SQL并在数据库上执行。实时时间采用数据库的时间
     `,
     func: async (userQuery: string) => {
       try {

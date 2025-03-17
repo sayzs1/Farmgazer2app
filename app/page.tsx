@@ -4,12 +4,14 @@ import { useEffect, useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DetectionCard } from '@/components/features/DetectionCard';
 import { Loading } from '@/components/ui/loading';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // 定义检测数据的类型接口
 interface Detection {
   id: string;
   imageUrl: string;
   deviceId: string;
+  deviceName: string;
   timestamp: string;
   category: 'weeds' | 'drought' | 'disease' | 'ponding' | 'healthy' | 'pest';
   temperature: number;
@@ -126,7 +128,7 @@ export default function Home() {
                       after:right-0
                       after:h-0.5
                       after:rounded-full
-                      after:bg-blue-600
+                      after:bg-emerald-600
                       after:transition-transform
                       after:scale-x-0
                       data-[state=active]:after:scale-x-100
@@ -146,21 +148,51 @@ export default function Home() {
             value={category}
             className="mt-6"
           >
-            <div className="flex flex-col space-y-4 max-w-4xl mx-auto">
-              {detections
-                .filter(detection => detection.category === category)
-                .map((detection) => (
-                  <div key={detection.id}>
-                    <DetectionCard
-                      id={detection.id}
-                      imageUrl={detection.imageUrl}
-                      deviceId={detection.deviceId}
-                      timestamp={detection.timestamp}
-                      category={detection.category}
-                    />
-                  </div>
-                ))}
-            </div>
+            <motion.div 
+              className="flex flex-col space-y-4 max-w-4xl mx-auto"
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: {},
+                visible: {
+                  transition: {
+                    staggerChildren: 0.05
+                  }
+                }
+              }}
+            >
+              <AnimatePresence>
+                {detections
+                  .filter(detection => detection.category === category)
+                  .map((detection) => (
+                    <motion.div 
+                      key={detection.id}
+                      variants={{
+                        hidden: { opacity: 0, y: 20, scale: 0.95 },
+                        visible: { 
+                          opacity: 1, 
+                          y: 0, 
+                          scale: 1,
+                          transition: {
+                            type: "spring",
+                            stiffness: 400,
+                            damping: 25
+                          }
+                        }
+                      }}
+                    >
+                      <DetectionCard
+                        id={detection.id}
+                        imageUrl={detection.imageUrl}
+                        deviceId={detection.deviceId}
+                        deviceName={detection.deviceName}
+                        timestamp={detection.timestamp}
+                        category={detection.category}
+                      />
+                    </motion.div>
+                  ))}
+              </AnimatePresence>
+            </motion.div>
           </TabsContent>
         ))}
       </Tabs>

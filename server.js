@@ -1,6 +1,11 @@
+require('dotenv').config()
+
 const { createServer } = require('http')
 const { parse } = require('url')
 const next = require('next')
+
+// 输出环境变量以验证
+console.log('当前环境:', process.env.NODE_ENV)
 
 const dev = process.env.NODE_ENV !== 'production'
 const port = process.env.PORT || 3000

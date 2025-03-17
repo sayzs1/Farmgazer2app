@@ -9,19 +9,19 @@ interface TaskItem {
   humidity: number;
   category_tag: string;
   AI_analysis: string;
-  priority: number;
+  priority: string | number;
   device_id: string;
 }
 
 export async function GET() {
   try {
-    // 查询优先级为1或2的图片数据
+    // 修改查询，使用字符串比较而非数字比较
     const result = await query<TaskItem[]>(`
       SELECT 
         image_id, image_url, time, temperature, humidity,
         category_tag, AI_analysis, priority, device_id
       FROM dbo.ImageData
-      WHERE priority IN (1, 2)
+      WHERE priority LIKE '1%' OR priority LIKE '2%' 
       ORDER BY time DESC
     `);
 
