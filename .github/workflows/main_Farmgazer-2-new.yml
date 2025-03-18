@@ -176,6 +176,7 @@ jobs:
         uses: azure/appservice-settings@v1
         with:
           app-name: 'Farmgazer-2-new'
+          slot-name: 'Production'
           app-settings-json: |
             [
               {
