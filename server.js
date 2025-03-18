@@ -18,6 +18,14 @@ console.log('开发模式:', dev)
 const app = next({ dev })
 const handle = app.getRequestHandler()
 
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('未处理的 Promise 拒绝:', reason)
+})
+
+process.on('uncaughtException', (error) => {
+  console.error('未捕获的异常:', error)
+})
+
 app.prepare()
   .then(() => {
     console.log('Next.js 应用准备就绪')
@@ -32,9 +40,16 @@ app.prepare()
       }
     })
 
-    server.listen(port, (err) => {
-      if (err) throw err
-      console.log(`> Ready on http://localhost:${port}`)
+    server.listen(port, '0.0.0.0', (err) => {
+      if (err) {
+        console.error('服务器启动错误:', err)
+        throw err
+      }
+      console.log(`> Ready on http://0.0.0.0:${port}`)
+    })
+
+    server.on('error', (err) => {
+      console.error('服务器错误:', err)
     })
   })
   .catch((err) => {
