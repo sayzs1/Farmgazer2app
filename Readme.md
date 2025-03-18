@@ -1,13 +1,13 @@
 # FarmGazer 2.0
 
 A Next.js application for agricultural monitoring and analysis, deployed on Azure Web Services. The deployment process is automated using GitHub Actions workflow.
-Live demo: [FarmGazer 2.0](https://farmgazer2app-ducnavhaadahdefa.eastus-01.azurewebsites.net/database)
+Live demo: [FarmGazer 2.0](https://farmgazer2app-ducnavhaadahdefa.eastus-01.azurewebsites.net/database) 
 
 
 ## 🌾 Overview
 
 FarmGazer 2.0 is a web application that provides real-time monitoring and analysis of agricultural conditions using data from IoT devices. The application displays information about:
-- Weed detection
+- Weed detections
 - Drought conditions
 - Disease identification
 - Water pooling issues
@@ -73,4 +73,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📝 License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License...
