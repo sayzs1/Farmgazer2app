@@ -11,10 +11,10 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
-    timeout-minutes: 20
+    runs-on: ubuntu-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read
+    timeout-minutes: 30
 
     steps:
       - uses: actions/checkout@v4
@@ -23,49 +23,77 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '20.x'
+          cache: 'npm'
 
-      - name: npm install, build, and test
+      - name: Clean install and build
         run: |
-          npm install
-          npm run build --if-present
-          npm run test --if-present
-      
+          echo "清理旧文件..."
+          rm -rf node_modules
+          rm -rf .next
+          echo "安装依赖..."
+          npm ci
+          echo "构建应用..."
+          npm run build
+        env:
+          AZURE_SQL_SERVER: ${{ secrets.AZURE_SQL_SERVER }}
+          AZURE_SQL_DATABASE: ${{ secrets.AZURE_SQL_DATABASE }}
+          AZURE_SQL_USER: ${{ secrets.AZURE_SQL_USER }}
+          AZURE_SQL_PASSWORD: ${{ secrets.AZURE_SQL_PASSWORD }}
+          AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+          AZURE_STORAGE_CONTAINER_NAME: ${{ secrets.AZURE_STORAGE_CONTAINER_NAME }}
+          NODE_ENV: production
+          CI: true
+
+      - name: Optimize deployment package
+        run: |
+          echo "优化部署包大小..."
+          rm -rf node_modules/.cache
+          npm prune --production
+          echo "验证构建输出..."
+          if [ ! -d ".next" ]; then
+            echo "构建输出目录 .next 不存在!"
+            exit 1
+          fi
+          echo "列出构建文件..."
+          ls -la .next/
+          echo "创建部署包..."
+          zip -r release.zip . -x "*.git*" "*.github*" "node_modules/.cache/*" "*.map" "*.log"
+
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: .
+          path: release.zip
+          retention-days: 1
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    timeout-minutes: 30
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+      id-token: write
+      contents: read
 
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: node-app
-      
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_577DDA4BC4DC4694AA5F4FEF5D3F4241 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_5F648F2594A5436AB003E567A6808005 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_CDA62F072A1C40FA8B1B8F529CB89B35 }}
+
+      - name: Unzip artifact for deployment
+        run: |
+          unzip release.zip
+          echo "部署文件列表："
+          ls -la
 
       - name: 'Deploy to Azure Web App'
-        uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
+        uses: azure/webapps-deploy@v3
         with:
           app-name: 'Farmgazer-2-new'
-          slot-name: 'Production'
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: .
           clean: true
-          
+          startup-command: 'node server.js'

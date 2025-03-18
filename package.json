@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "preinstall": "npm install openai",
     "dev": "WATCHPACK_POLLING=true next dev",
     "build": "next build",
     "start": "node server.js",
@@ -89,5 +88,7 @@
     "vaul": "^0.9.9",
     "zod": "^3.23.8",
     "zod-to-json-schema": "^3.23.2"
-  }
+  },
+  "WEBSITES_PORT": "3000",
+  "PORT": "3000"
 }
