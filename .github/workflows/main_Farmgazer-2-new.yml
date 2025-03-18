@@ -94,89 +94,13 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip
 
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_029B35931F9A430DAF29AAAD877FEE41 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_ADCCA55F290C4CCDA738BB525A0109E4 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_F93D0492C2B9485BA89305381EF23CF7 }}
-
-      # 创建自定义部署脚本
-      - name: Create deployment scripts
-        run: |
-          echo "创建自定义部署脚本..."
-          echo '[config]' > .deployment
-          echo 'command = bash deploy.sh' >> .deployment
-          
-          cat > deploy.sh << 'EOL'
-          #!/bin/bash
-          
-          # 优化内存使用
-          export NODE_OPTIONS="--max-old-space-size=4096"
-          
-          # 设置启动命令
-          echo "node server.js" > startup.txt
-          
-          echo "部署完成!"
-          exit 0
-          EOL
-          
-          chmod +x deploy.sh
-          
-          # 创建web.config
-          cat > web.config << 'EOL'
-          <?xml version="1.0" encoding="utf-8"?>
-          <configuration>
-            <system.webServer>
-              <webSocket enabled="false" />
-              <handlers>
-                <add name="iisnode" path="server.js" verb="*" modules="iisnode" />
-              </handlers>
-              <rewrite>
-                <rules>
-                  <rule name="StaticContent">
-                    <action type="Rewrite" url="public{REQUEST_URI}" />
-                  </rule>
-                  <rule name="DynamicContent">
-                    <conditions>
-                      <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="True" />
-                    </conditions>
-                    <action type="Rewrite" url="server.js" />
-                  </rule>
-                </rules>
-              </rewrite>
-              <iisnode 
-                nodeProcessCommandLine="node.exe --max-old-space-size=4096"
-                watchedFiles="*.js;node_modules\*;routes\*.js;views\*.jade"
-                loggingEnabled="true"
-                logDirectory="iisnode"
-                maxLogFileSizeInKB="1024"
-                maxTotalLogFileSizeInKB="20480"
-                maxLogFiles="20"
-              />
-              <security>
-                <requestFiltering>
-                  <hiddenSegments>
-                    <remove segment="bin" />
-                  </hiddenSegments>
-                </requestFiltering>
-              </security>
-            </system.webServer>
-          </configuration>
-          EOL
-
-      # 在部署前安装生产依赖
-      - name: Install production dependencies
-        run: |
-          npm ci --only=production --no-optional
-          ls -la .next/
-
       # 设置应用设置
       - name: Set Web App Settings
         uses: azure/appservice-settings@v1
         with:
           app-name: 'Farmgazer-2-new'
           slot-name: 'Production'
+          mask-inputs: true
           app-settings-json: |
             [
               {
@@ -246,7 +170,7 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'Farmgazer-2-new'
-          slot-name: 'Production'
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: .
           clean: true
           startup-command: 'node server.js'
