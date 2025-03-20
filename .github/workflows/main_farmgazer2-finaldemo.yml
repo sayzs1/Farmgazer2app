@@ -35,11 +35,14 @@ jobs:
           # 复制必要文件
           cp -r .next deploy/
           cp -r node_modules deploy/
-          cp -r public deploy/
           cp package.json deploy/
           cp package-lock.json deploy/
           cp server.js deploy/
           cp web.config deploy/
+          # 如果存在则复制可选目录
+          [ -d "public" ] && cp -r public deploy/
+          [ -d "static" ] && cp -r static deploy/
+          [ -d "assets" ] && cp -r assets deploy/
           # 压缩部署包
           cd deploy
           zip -r ../release.zip . -x "*.git*"
