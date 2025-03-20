@@ -35,10 +35,20 @@ jobs:
           # 复制必要文件
           cp -r .next deploy/
           cp -r node_modules deploy/
+          cp -r app deploy/
+          cp -r components deploy/
+          cp -r lib deploy/
+          cp -r hooks deploy/
           cp package.json deploy/
           cp package-lock.json deploy/
           cp server.js deploy/
           cp web.config deploy/
+          cp next.config.js deploy/
+          cp tsconfig.json deploy/
+          cp postcss.config.js deploy/
+          cp tailwind.config.js deploy/
+          cp tailwind.config.ts deploy/
+          cp components.json deploy/
           # 如果存在则复制可选目录
           [ -d "public" ] && cp -r public deploy/
           [ -d "static" ] && cp -r static deploy/
